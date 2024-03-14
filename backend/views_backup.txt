@@ -1,0 +1,146 @@
+from django.shortcuts import render
+
+# Create your views here.
+from django.http import HttpResponse
+
+
+
+def index(request):
+    return HttpResponse("Hello, you are at backend server")
+
+
+# views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import SensorData
+from datetime import datetime, timedelta, timezone
+from django.db.models import Avg
+
+def getAverageValues():
+    # Calculate time ranges
+    end_date = datetime.now()
+    start_date_1_day = end_date - timedelta(days=1)
+    start_date_1_week = end_date - timedelta(weeks=1)
+
+    # Get sensor data for the last 1 day and calculate averages
+    data_1_day = SensorData.objects.filter(timestamp__gte=start_date_1_day, timestamp__lte=end_date)
+    print("////-")
+    print(data_1_day)
+    print("///")
+    average_temperature_1_day = data_1_day.aggregate(avg_temperature=Avg('temperature'))['avg_temperature']
+    average_humidity_1_day = data_1_day.aggregate(avg_humidity=Avg('humidity'))['avg_humidity']
+
+    # Get sensor data for the last 1 week and calculate averages
+    data_1_week = SensorData.objects.filter(timestamp__gte=start_date_1_week, timestamp__lte=end_date)
+    average_temperature_1_week = data_1_week.aggregate(avg_temperature=Avg('temperature'))['avg_temperature']
+    average_humidity_1_week = data_1_week.aggregate(avg_humidity=Avg('humidity'))['avg_humidity']
+
+    print("Last 1 day:")
+    print(f"Average Temperature: {average_temperature_1_day:.2f}")
+    print(f"Average Humidity: {average_humidity_1_day:.2f}")
+
+    print("\nLast 1 week:")
+    print(f"Average Temperature: {average_temperature_1_week:.2f}")
+    print(f"Average Humidity: {average_humidity_1_week:.2f}")
+    
+    avg_details = {
+        "last_1_day":{
+            "avarage_temperature": round(average_temperature_1_day,2),
+            "average_humidity":round(average_humidity_1_day,2)
+        },
+        "last_1_week":{
+            "average_temperature":round(average_temperature_1_week,2),
+            "avarage_humidity":round(average_humidity_1_day,2)
+        }
+    }
+    return avg_details
+
+class latestSensorData(APIView):
+    def get(self, request, format=None):
+        #get latest sensor data
+        
+        # obj = SensorData.filter(timestamp=12).order_by('id').latest('id')
+        obj = SensorData.objects.latest('timestamp')
+        print(obj)
+        print(obj.timestamp)
+        print(obj.id)
+        print(obj.temperature)
+        print(obj.humidity)
+        #get average of data for week, day
+
+        all_avg_values = getAverageValues()
+
+
+        formatted_timestamp = obj.timestamp.strftime('%A, %B %d, %Y - %I:%M %p')
+
+
+        result = {
+            "latest":{
+                "temperature": obj.temperature,
+                "humidity": obj.humidity,
+                "timestamp":formatted_timestamp#obj.timestamp
+            },
+            "average": all_avg_values
+        }
+
+        return Response(result)
+    
+
+    def post(self, request, format=None):
+        
+        return Response("HELLO POST")
+
+
+
+class liveRecordsSensorData(APIView):
+    def get(self, request, format=None):
+        num_records = 10
+        # Calculate the time range for the last 60 minutes
+        end_time = datetime.now(timezone.utc)
+        start_time = end_time - timedelta(minutes=num_records)
+
+        
+
+        # Query sensor data for the last 60 minutes
+        data_last_60_minutes = SensorData.objects.filter(timestamp__gte=start_time, timestamp__lte=end_time)
+
+        # Group data by minute intervals and calculate average temperature and humidity for each minute
+        data_per_minute = (
+            data_last_60_minutes
+            .extra(
+                select={'minute': "DATE_FORMAT(timestamp, '%%Y-%%m-%%d %%H:%%i:00')"}
+            )
+            .values('minute')
+            .annotate(avg_temperature=Avg('temperature'), avg_humidity=Avg('humidity'))
+        )
+
+        # Create a dictionary to store the average values for each minute
+        minute_data = {entry['minute']: {'temperature': round(entry['avg_temperature'], 2), 'humidity': round(entry['avg_humidity'], 2)} for entry in data_per_minute}
+
+        # Create a list of all possible minute intervals within the time range
+        all_minutes = [(start_time + timedelta(minutes=i)).strftime('%Y-%m-%d %H:%M:00') for i in range(0, num_records+1)]
+
+        # Initialize the list of live records
+        live_records = []
+
+        # Iterate through all possible minute intervals and populate live records
+        for minute in all_minutes:
+            record = {
+                'minute': minute,
+                'temperature': minute_data.get(minute, {'temperature': 0})['temperature'],
+                'humidity': minute_data.get(minute, {'humidity': 0})['humidity']
+            }
+            live_records.append(record)
+
+        print("live data length: ")
+        print(len(live_records))
+        result = {
+            'liveRecords': live_records
+        }
+
+        return Response(result)
+    
+
+    def post(self, request, format=None):
+        
+        return Response("HELLO POST")
