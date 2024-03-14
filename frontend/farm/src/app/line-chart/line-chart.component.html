@@ -1,0 +1,57 @@
+<div>
+  <!-- text -->
+  <div id="data-for-text">
+    <div *ngIf="averageData">
+      <h2>Average Values</h2>
+      <p>Last 1 Day Temperature: {{ averageData.last_1_day.temperature }}</p>
+      <p>Last 1 Day Humidity: {{ averageData.last_1_day.humidity }}</p>
+      <p>Last 1 Day Moisture: {{ averageData.last_1_day.moisture }}</p>
+      <p>Last 1 Day Lux: {{ averageData.last_1_day.lux }}</p>
+      <p>Last 1 Day PH: {{ averageData.last_1_day.pH }}</p>
+
+      <p>Last 1 Week Temperature: {{ averageData.last_1_week.temperature }}</p>
+      <p>Last 1 Week Humidity: {{ averageData.last_1_week.humidity }}</p>
+      <p>Last 1 Week Moisture: {{ averageData.last_1_week.moisture }}</p>
+      <p>Last 1 Week Lux: {{ averageData.last_1_week.lux }}</p>
+      <p>Last 1 Week PH: {{ averageData.last_1_week.pH }}</p>
+    </div>  
+    <div *ngIf="latestData">
+      <h2>Latest Values</h2>
+      <p>Temperature: {{ latestData.temperature }}</p>
+      <p>Humidity: {{ latestData.humidity }}</p>
+      <p>Moisture: {{ latestData.moisture }}</p>
+      <p>Lux: {{ latestData.lux}}</p>
+      <p>PH: {{ latestData.pH }}</p>
+      <p>Timestamp: {{ latestData.timestamp }}</p>
+    </div>
+  </div>
+<!-- chart -->
+  <div id="data-for-chart">
+    <div id="chart-container">
+      <highcharts-chart [Highcharts]="Highcharts" [options]="chartOptions"
+        style="width: 100%; height: 400px; display: block;">
+      </highcharts-chart>
+    </div>
+    <div id="chart-container-humidity">
+      <highcharts-chart [Highcharts]="Highcharts_humidity" [options]="chartOptions_humidity"
+        style="width: 100%; height: 400px; display: block;">
+      </highcharts-chart>
+    </div>
+    <div id="chart-container-moisture">
+      <highcharts-chart [Highcharts]="Highcharts_moisture" [options]="chartOptions_moisture"
+        style="width: 100%; height: 400px; display: block;">
+      </highcharts-chart>
+    </div>
+    <div id="chart-container-lux">
+      <highcharts-chart [Highcharts]="Highcharts_lux" [options]="chartOptions_lux"
+        style="width: 100%; height: 400px; display: block;">
+      </highcharts-chart>
+    </div>
+    <div id="chart-container-pH">
+      <highcharts-chart [Highcharts]="Highcharts_pH" [options]="chartOptions_pH"
+        style="width: 100%; height: 400px; display: block;">
+      </highcharts-chart>
+    </div>
+
+  </div>
+</div>

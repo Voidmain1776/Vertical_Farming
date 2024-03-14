@@ -1,0 +1,89 @@
+import { Component, OnInit } from '@angular/core';
+import * as Highcharts from 'highcharts';
+import { Options } from 'highcharts';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-line-chart',
+  templateUrl: './line-chart.component.html',
+  styleUrls: ['./line-chart.component.css'],
+})
+export class LineChartComponent implements OnInit {
+  Highcharts: typeof Highcharts = Highcharts;
+  chartOptions: Highcharts.Options = {
+    title: {
+      text: 'Live Data Line Chart',
+    },
+    xAxis: {
+      type: 'datetime',
+    },
+    series: [
+      {
+        type: 'line',
+        name: 'Live Data',
+        data: [], // Start with an empty data array
+      },
+    ],
+  };
+  chart: Highcharts.Chart | undefined; // Declare chart reference
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    // Create the chart instance
+    this.chart = Highcharts.chart('chart-container', this.chartOptions);
+
+    setInterval(() => {
+      // const timestamp = new Date().getTime();
+      // const value = Math.random() * 100;
+
+      // if (this.chart) {
+      //   this.chart.series[0].addPoint(
+      //     [timestamp, value],
+      //     true,
+      //     this.chart.series[0].data.length >= 10
+      //   );
+      // }
+
+
+     this.makeAPICall();
+      
+
+
+    }, 1000);
+  }
+
+  makeAPICall():void{
+    const apiUrl = "http://localhost:8000/liveRecordsSensorData";
+    const headers = {
+      "Content-Type":"application/json"
+    };
+    this.http.get(apiUrl, { headers }).subscribe(
+      (response: any) => {
+        console.log("API response", response);
+        
+        console.log(response.liveRecords[0])
+
+        
+
+        if (this.chart) {
+          const timestamp = response.minute;//new Date(response.minute).getTime();
+          const temperature = response.liveRecords.temperature;
+          const humidity = response.liveRecords.humidity;
+          console.log(response.humidity);
+          console.log(response.temperature);
+          console.log(timestamp);
+          // Update the chart with temperature and humidity data
+          this.chart.series[0].addPoint([timestamp, temperature], true, this.chart.series[0].data.length >= 10);
+          // You might add another series for humidity if needed
+          // this.chart.series[1].addPoint([timestamp, humidity], true, this.chart.series[1].data.length >= 10);
+
+
+        }
+      },
+      (error) => {
+        console.log("API error", error);
+      }
+    )
+  }
+}

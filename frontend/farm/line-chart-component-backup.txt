@@ -1,0 +1,48 @@
+import { Component, OnInit } from '@angular/core';
+import * as Highcharts from 'highcharts';
+import { Options } from 'highcharts';
+
+@Component({
+  selector: 'app-line-chart',
+  templateUrl: './line-chart.component.html',
+  styleUrls: ['./line-chart.component.css'],
+})
+export class LineChartComponent implements OnInit {
+  Highcharts: typeof Highcharts = Highcharts;
+  chartOptions: Highcharts.Options = {
+    title: {
+      text: 'Live Data Line Chart',
+    },
+    xAxis: {
+      type: 'datetime',
+    },
+    series: [
+      {
+        type: 'line',
+        name: 'Live Data',
+        data: [], // Start with an empty data array
+      },
+    ],
+  };
+  chart: Highcharts.Chart | undefined; // Declare chart reference
+
+  constructor() {}
+
+  ngOnInit(): void {
+    // Create the chart instance
+    this.chart = Highcharts.chart('chart-container', this.chartOptions);
+
+    setInterval(() => {
+      const timestamp = new Date().getTime();
+      const value = Math.random() * 100;
+
+      if (this.chart) {
+        this.chart.series[0].addPoint(
+          [timestamp, value],
+          true,
+          this.chart.series[0].data.length >= 10
+        );
+      }
+    }, 1000);
+  }
+}
